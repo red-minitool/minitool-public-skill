@@ -1,0 +1,15 @@
+image: python:3.12-slim
+
+validate:
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git
+  script:
+    - python -m pip install -r requirements-dev.txt
+    - |
+      found=0
+      for skill in src/*/SKILL.md; do
+        test -f "$skill" || continue
+        found=1
+        skills-ref validate "$(dirname "$skill")" || exit 1
+      done
+      test "$found" -eq 1

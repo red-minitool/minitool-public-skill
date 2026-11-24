@@ -1,42 +1,46 @@
 # RED MiniTool Skills
 
-A collection of Agent Skills for RED MiniTool workflows. One repository can contain multiple independently installable skills.
+A collection of Agent Skills for RED MiniTool workflows. Each skill is independently installable from `src/<skill-name>/`.
 
-## Layout
+## Beta development
 
-```text
-src/
-  first-skill/
-    SKILL.md
-    references/
-    scripts/
-    assets/
-  second-skill/
-    SKILL.md
-skills.sh.json
-```
+This branch publishes development content for install and update verification. The `main` branch remains the stable entry point; changes on `beta` are not automatically promoted.
 
-The skill names above are layout examples, not published skills. Only create references, scripts, and assets when a skill needs them.
-
-## Discover and install
-
-After skills have been added:
+Use Node.js 22.20.0 or newer and Git. Run these commands in a temporary project for testing:
 
 ```sh
-npx skills add red-minitool/minitool-public-skill --list
-npx skills add red-minitool/minitool-public-skill --skill your-skill-name --agent codex
+DISABLE_TELEMETRY=1 npx skills@1.8.1 add 'red-minitool/minitool-public-skill#beta' --list
+DISABLE_TELEMETRY=1 npx skills@1.8.1 add 'red-minitool/minitool-public-skill#beta' --skill minitool-h5-builder --agent codex
+DISABLE_TELEMETRY=1 npx skills@1.8.1 check minitool-h5-builder --project
+DISABLE_TELEMETRY=1 npx skills@1.8.1 update minitool-h5-builder --project -y
+DISABLE_TELEMETRY=1 npx skills@1.8.1 remove minitool-h5-builder -y
 ```
 
-Replace `your-skill-name` with a name shown by `--list`. The root `skills.sh.json` declares `./src` as the discovery directory. Do not add a root-level `SKILL.md`.
+`check` and `update` follow the Git source and branch recorded in `skills-lock.json`. A beta installation continues following `beta`; installing from `main` is an explicit source change. Review local edits before reinstalling. Removing a named skill removes its installations across project agents; omit global flags to keep these commands project-scoped.
 
-## Add a skill
-
-1. Create `src/<skill-name>/SKILL.md`. Use a unique lowercase kebab-case name matching the folder.
-2. Include `name` and `description` in YAML frontmatter. Describe the purpose and trigger scenarios.
-3. Keep instructions focused on inputs, steps, constraints, and verification. Add supporting resources inside the same skill directory.
-4. Check relative references and command examples, then verify discovery and installation in a temporary project.
-5. Update this repository catalog when adding or removing a skill.
+Installing a skill supplies instructions and resources to an agent. Platform CLI operations additionally require a compatible installed `redminitool` and the user's authorization.
 
 ## Catalog
 
-No skills are published yet. This repository currently contains the multi-skill layout and maintenance instructions only.
+| Skill | Version | Purpose |
+| --- | --- | --- |
+| [minitool-h5-builder](src/minitool-h5-builder/SKILL.md) | 0.2.4-beta.1 | Build or adapt offline H5 content and verify its ZIP artifact |
+
+## Layout and maintenance
+
+Each skill contains a required `SKILL.md` and only the references, scripts, or assets it actually needs. Add future skills beside the existing directory under `src/`, not inside another skill. The root `skills.sh.json` declares `./src` as the discovery directory; do not add a root-level `SKILL.md`.
+
+Use a unique `name` matching the skill directory, describe purpose and triggers in `description`, and keep relative references inside the skill. Update the catalog when adding a skill. See [AGENTS.md](AGENTS.md) and [CHANGELOG.md](CHANGELOG.md) for maintenance rules and versions.
+
+## Validation
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+for skill in src/*/SKILL.md; do
+  test -f "$skill" || exit 1
+  .venv/bin/skills-ref validate "$(dirname "$skill")" || exit 1
+done
+```
+
+CI validates all skills under `src/`. Also check relative links and actual task behavior when changing a skill's workflow.

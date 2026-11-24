@@ -1,0 +1,25 @@
+name: Validate skills
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements-dev.txt
+      - name: Validate every skill
+        run: |
+          found=0
+          for skill in src/*/SKILL.md; do
+            test -f "$skill" || continue
+            found=1
+            skills-ref validate "$(dirname "$skill")" || exit 1
+          done
+          test "$found" -eq 1
